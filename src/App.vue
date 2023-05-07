@@ -3,10 +3,14 @@
     
     <q-page-container>
       <q-page class="column justify-start items-center q-py-xl">
-        <q-btn label="新增紀錄" color="primary" size="lg" @click="openModal" />
-        <div class="text-h6 text-weight-bold q-py-md">累積幣量:
+        <div  class="row items-center">
+          <div class="text-h6 text-weight-bold q-py-md q-mr-lg">累積幣量:
           {{ count_total }}
         </div>
+           <q-btn label="新增紀錄" color="primary" size="lg" @click="openModal" />
+        
+        </div>
+       
          <q-table
 
   :loading="!tableDataLoaded"
