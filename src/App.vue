@@ -9,7 +9,7 @@
         </div>
          <q-table
 
-  :rows="tableData.reverse()"
+  :rows="tableData"
   :columns="columns"
   row-key="name"
   class="q-my-md"
@@ -147,9 +147,13 @@ onSnapshot(collection(db, "record"), (snapshot) => {
     data.id = doc.id;
     newData.push(data);
   });
+  // sort the data by text
+  newData.sort((a, b) => b.text - a.text);
+
   tableData.value = newData;
   tableDataLoaded.value = true;
-  count_total.value = Math.max(...tableData.value.map((item) => item.text)) - Math.min(...tableData.value.map((item) => item.text))
+  if(tableData.value.length > 0)
+    count_total.value = Math.max(...tableData.value.map((item) => item.text)) - Math.min(...tableData.value.map((item) => item.text))
 });
 
 
@@ -167,10 +171,11 @@ function insert() {
     text: text.value,
     items: inputs.value,
   }
-  if(parseInt(text.value) < parseInt(tableData.value[tableData.value.length-1].text)){
+  if(tableData.value.length>0 && parseInt(text.value) < Math.max(...tableData.value.map((item) => item.text))){
     alert("計數器應大於上一次紀錄")
+    return
   }
-  // addDoc(collection(db, "record"), record_data);
+  addDoc(collection(db, "record"), record_data);
   // close the modal
   state.modalOpened = false;
   // reset the form
