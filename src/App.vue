@@ -23,9 +23,9 @@
   <template v-slot:body="props">
     <q-tr :props="props">
       
-      <q-td v-for="(col,idx) in props.cols" :key="col.name" :props="props">
+      <q-td v-for="col in props.cols" :key="col.name" :props="props">
          <template v-if="col.name === 'delete'">
-        <q-btn flat color="negative" style="opacity:70%" icon="delete" @click="showDialog(idx)" />
+        <q-btn flat color="negative" style="opacity:70%" icon="delete" @click="showDialog(props.rowIndex)" />
       </template>
         {{ col.value }}
       </q-td>
@@ -124,6 +124,7 @@ const columns = ref([
  
 ]);
 
+
 // const tableData = ref([]);
 const tableData = ref([]);
 const count_total = ref(0);
@@ -133,9 +134,9 @@ let currentIndex;
 
 function showDialog(index) {
   currentIndex = index;
+  console.log(currentIndex)
   dialog.value = true;
 }
-
 function confirmDelete() {
   deleteRecord(tableData.value[currentIndex]);
   dialog.value = false;
@@ -147,7 +148,7 @@ const tableDataLoaded = ref(false);
 onSnapshot(collection(db, "record"), (snapshot) => {
   const newData = [];
   snapshot.forEach((doc) => {
-    console.log(doc.id, " => ", doc.data())
+    // console.log(doc.id, " => ", doc.data())
     let data = doc.data();
     data.id = doc.id;
     newData.push(data);
