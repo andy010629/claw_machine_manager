@@ -1,8 +1,29 @@
 <template>
   <q-layout>
+    
     <q-page-container>
-      <q-page class="row justify-center items-start q-py-xl">
+      <q-page class="column justify-start items-center q-py-xl">
         <q-btn label="新增紀錄" color="primary" size="lg" @click="openModal" />
+         <q-table
+
+  :rows="tableData"
+  :columns="columns"
+  row-key="name"
+  class="q-my-md"
+  style="width: 70vw;"
+>
+  <template v-slot:body="props">
+    <q-tr :props="props">
+      
+      <q-td v-for="col in props.cols" :key="col.name" :props="props">
+         <template v-if="col.name === 'delete'">
+        <q-btn flat color="negative" style="opacity:70%" icon="delete" @click="deleteRecord(props.row)" />
+      </template>
+        {{ col.value }}
+      </q-td>
+    </q-tr>
+  </template>
+</q-table>
         <q-dialog v-model="state.modalOpened">
           <q-card class="q-px" style="width: 70vw;">
             <q-card-section>
@@ -32,24 +53,93 @@
                 :key="index"
                 class="q-px-sm row items-center q-mb-sm" 
               >
-                <q-input outlined  dense v-model="input.text" :label="`出貨品項 ${index+1}`"/>
+                <q-input outlined  dense v-model="input.name" :label="`出貨品項 ${index+1}`"/>
                 <q-btn class="q-ml-sm"  flat dense size="sm"  color="red" icon="remove"  @click="removeInput(index)" />
               </div>
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Close" v-close-popup />
-              <q-btn flat label="Add" />
+              <q-btn @click="insert" flat label="Add" />
             </q-card-actions>
           </q-card>
         </q-dialog>
       </q-page>
+      <!-- a table with data -->
+      
     </q-page-container>
+    
   </q-layout>
 </template>
 
 <script setup>
 import { reactive, ref } from "vue";
 import { QDialog, QLayout, QPage, QPageContainer } from "quasar";
+
+import { useCollection } from 'vuefire'
+import { collection ,addDoc,onSnapshot,doc, deleteDoc} from 'firebase/firestore'
+
+import { useFirestore } from 'vuefire'
+
+const db = useFirestore()
+
+// const todos = useCollection(collection(db, 'todo'))
+
+
+// get the data
+const columns = ref([
+
+  // { name: "id", label: "ID", field: "id", sortable: true,  align: "left"},
+
+  { name: "date", label: "日期", field: "date", sortable: true,tableShow: true, align: "left" },
+  { name: "text", label: "計數器", field: "text", sortable: true ,tableShow: true, align: "left"},
+  { name: "items", label: "出貨紀錄", field: (row) => row.items.map((item) => item.name).join(', '), sortable: true  ,align: "left"},
+  {
+  name: "delete",
+  label: "删除",
+  align: "center"
+ 
+},
+]);
+
+// const tableData = ref([]);
+const tableData = ref([
+
+]);
+
+
+const tableDataLoaded = ref(false);
+
+onSnapshot(collection(db, "record"), (snapshot) => {
+  const newData = [];
+  snapshot.forEach((doc) => {
+    console.log(doc.id, " => ", doc.data())
+    let data = doc.data();
+    data.id = doc.id;
+    newData.push(data);
+  });
+  tableData.value = newData;
+  tableDataLoaded.value = true;
+});
+
+
+
+async function deleteRecord(record) {
+ 
+  const recordRef = doc(db, "record", record.id);
+  await deleteDoc(recordRef);
+}
+
+function insert() {
+  const record_data = {
+    date: date.value,
+    text: text.value,
+    items: inputs.value,
+  }
+  addDoc(collection(db, "record"), record_data);
+  // close the modal
+  state.modalOpened = false;
+}
+
 
 const state = reactive({
   modalOpened: false,
@@ -60,7 +150,7 @@ const date = ref(new Date().toISOString().substr(0, 10));
 const inputs = ref([]);
 
 function addInput() {
-  inputs.value.push({ text: "" });
+  inputs.value.push({ "name": "" });
 }
 function removeInput(index) {
   inputs.value.splice(index, 1);
