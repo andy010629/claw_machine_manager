@@ -86,27 +86,33 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+   
+    <div class="row justify-center" style="width: 90vw;"><canvas id="acquisitions"></canvas></div>
       </q-page>
       <!-- a table with data -->
       
+
     </q-page-container>
     
   </q-layout>
+
+   <!-- <LineChart :data="chartData" :options="chartOptions" /> -->
+    
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
+import { reactive, ref,onMounted } from "vue";
 import { QDialog, QLayout, QPage, QPageContainer } from "quasar";
 
 import { useCollection } from 'vuefire'
 import { collection ,addDoc,onSnapshot,doc, deleteDoc} from 'firebase/firestore'
-
 import { useFirestore } from 'vuefire'
 
+import Chart from 'chart.js/auto'
+
+
+
 const db = useFirestore()
-
-// const todos = useCollection(collection(db, 'todo'))
-
 
 // get the data
 const columns = ref([
@@ -145,22 +151,6 @@ function confirmDelete() {
 
 const tableDataLoaded = ref(false);
 
-onSnapshot(collection(db, "record"), (snapshot) => {
-  const newData = [];
-  snapshot.forEach((doc) => {
-    // console.log(doc.id, " => ", doc.data())
-    let data = doc.data();
-    data.id = doc.id;
-    newData.push(data);
-  });
-  // sort the data by text
-  newData.sort((a, b) => b.text - a.text);
-
-  tableData.value = newData;
-  tableDataLoaded.value = true;
-  if(tableData.value.length > 0)
-    count_total.value = Math.max(...tableData.value.map((item) => item.text)) - Math.min(...tableData.value.map((item) => item.text))
-});
 
 
 
@@ -216,4 +206,74 @@ function removeInput(index) {
 function openModal() {
   state.modalOpened = true;
 }
+
+onMounted(() => {
+  onSnapshot(collection(db, "record"), (snapshot) => {
+    const newData = [];
+    snapshot.forEach((doc) => {
+      // console.log(doc.id, " => ", doc.data())
+      let data = doc.data();
+      data.id = doc.id;
+      newData.push(data);
+    });
+
+    
+    // sort the data by text
+    newData.sort((a, b) => b.text - a.text);
+
+    tableData.value = newData;
+    tableDataLoaded.value = true;
+    if(tableData.value.length > 0)
+      count_total.value = Math.max(...tableData.value.map((item) => item.text)) - Math.min(...tableData.value.map((item) => item.text))
+    
+
+    
+    const chart_data = tableData.value.map((item) => {
+      return {
+        date: item.date,
+        text: item.text
+      }
+    })
+    chart_data.reverse()
+
+    // add text diff accumlate to chart data
+    chart_data.forEach((item,index)=>{
+      if(index === 0){
+        item.diff = 0
+      }else{
+        item.diff = item.text - chart_data[index-1].text + chart_data[index-1].diff
+      }
+    })
+
+    new Chart(
+      document.getElementById('acquisitions'),
+      {
+        type: 'line',
+        data: {
+          labels: chart_data.map(row => row.date.substr(5)),
+          datasets: [
+            {
+              label: '幣量走勢圖',
+              data: chart_data.map(row => row.diff),
+               fill: false, 
+              borderWidth: 5
+            }
+          ] 
+        },options: {
+        scales: {
+          x: {
+            ticks: {
+              display: true, // 將此值設置為 false 以隱藏 X 軸標籤
+            },
+          },
+        },
+      },
+      }
+  );
+
+
+    });
+
+
+});
 </script>
