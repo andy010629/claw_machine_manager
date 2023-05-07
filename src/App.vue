@@ -177,6 +177,13 @@ function insert() {
     text: text.value,
     items: inputs.value,
   }
+
+  // if text is empty
+  if (text.value.length === 0) {
+    alert("請輸入計數器");
+    return;
+  }
+
   if(tableData.value.length>0 && parseInt(text.value) < Math.max(...tableData.value.map((item) => item.text))){
     alert("計數器應大於上一次紀錄")
     return
