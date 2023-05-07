@@ -9,6 +9,7 @@
         </div>
          <q-table
 
+  :loading="!tableDataLoaded"
   :rows="tableData"
   :columns="columns"
   row-key="name"
