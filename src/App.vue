@@ -179,7 +179,7 @@ import { useFirestore } from 'vuefire'
 
 import Chart from 'chart.js/auto'
 
-const img_host = 'https://wild-pond-4019.fly.dev'
+const img_host = 'https://img.haobao.me'
 // const img_host = 'http://localhost:8000'
 
 const db = useFirestore()
